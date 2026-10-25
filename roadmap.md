@@ -1,4 +1,5 @@
 # Tasks
+- [x] Enhance the existing logo and derive sharp favicon and installation icons; verify small-size readability and browser asset loading.
 - [x] Keep Active leads selected by default and provide explicit tick/cross lead controls; verify status readback.
 - [x] Verify independent password logins and device-local logout; handle slow role lookup and mobile keyboard corrections.
 - [ ] Reproduce installed-app invalid-password error — blocked: need the affected app's website link; two independent browser logins succeeded.

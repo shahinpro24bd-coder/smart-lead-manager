@@ -80,7 +80,7 @@ function AuthPage() {
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-12">
       <section className="auth-form w-full">
         <div className="pb-6">
-          <img src="/team-shahin-logo.jpg" alt="TEAM SHAHIN" width={76} height={76} className="auth-emblem" />
+          <img src="/team-shahin-logo-v2.png" alt="TEAM SHAHIN" width={76} height={76} className="auth-emblem" />
           <p className="mb-3 text-xs font-semibold uppercase text-primary">Private workspace</p>
           <h1 className="text-4xl font-semibold">Welcome back<span className="text-primary">.</span></h1>
           <p className="mt-2 text-sm text-muted-foreground">TEAM SHAHIN-e sign in korun.</p>
