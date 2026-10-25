@@ -6,4 +6,6 @@
 - [x] Preserve uploaded leads with original ownership and verify import (1,355 rows, 12 owners, zero original-field mismatches).
 - [x] Rename the site TEAM SHAHIN and give the workspace and sign-in a professional presentation.
 - [x] Verify public screens, desktop/mobile layout, and signed-out protection.
-- [ ] Restore original account access — blocked: uploaded CSV contains leads only, no original account emails or account export; original ownership is preserved and designated admin login is verified.
+- [ ] Restore original account access — blocked: uploaded CSV contains leads only, no original account emails or account export; original ownership is preserved and designated admin login is verified.- [x] Import uploaded CSV (1,355 leads) into Previous Version Leads; each account sees only its own; same link blocked across all accounts.
+- [x] Logo served as a plain file so it loads on any host (e.g. Vercel).
+- [x] Admin account shahinpro24@gmail.com created with admin role.
