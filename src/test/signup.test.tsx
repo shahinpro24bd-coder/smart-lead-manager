@@ -22,7 +22,7 @@ async function login(isAdmin: boolean) {
   fireEvent.submit(screen.getByRole('button', { name: 'Login' }).closest('form') as HTMLFormElement);
   await waitFor(() => expect(navigate).toHaveBeenCalled());
   unmount();
-  return navigate.mock.calls[0][0];
+  return navigate.mock.calls[0]?.[0];
 }
 
 it('sends the admin straight to the admin dashboard', async () => {
