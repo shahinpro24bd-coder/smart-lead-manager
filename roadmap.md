@@ -1,4 +1,5 @@
 # Tasks
+- [ ] Put lead collection first and other feature boxes below; polish user, login and admin screens without changing their behavior.
 - [x] Use supplied logo and favicon, replace app-authored branding, improve and verify login presentation.
 - [x] Replace All Leads with Previous Version Leads; verify all 1,355 rows and cross-account canonical duplicate rejection in the UI.
 - [x] Add secure admin dashboard with submission times, counts and account removal; provision designated admin and verify login, activity readback, denied non-admin access and temporary-account removal.
