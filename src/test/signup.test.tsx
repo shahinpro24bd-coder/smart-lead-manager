@@ -1,28 +1,33 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 
-const { signUp, navigate } = vi.hoisted(() => ({ signUp: vi.fn(), navigate: vi.fn() }));
-vi.mock('@tanstack/react-router', () => ({
-  createFileRoute: () => (options: unknown) => options,
-  useNavigate: () => navigate,
-}));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { auth: {
-  getSession: vi.fn().mockResolvedValue({ data: { session: null } }), signUp,
+const { signIn, rpc, navigate } = vi.hoisted(() => ({ signIn: vi.fn(), rpc: vi.fn(), navigate: vi.fn() }));
+vi.mock('@tanstack/react-router', () => ({ createFileRoute: () => (o: unknown) => o, useNavigate: () => navigate }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc, auth: {
+  getSession: vi.fn().mockResolvedValue({ data: { session: null } }), signInWithPassword: signIn,
 } } }));
 vi.mock('@/integrations/lovable/index', () => ({ lovable: {} }));
 vi.mock('@/components/team-brand', () => ({ TeamBrand: () => null }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 import { Route } from '@/routes/auth';
 
-it('opens the workspace immediately when signup returns a session without verification', async () => {
-  signUp.mockResolvedValue({ data: { session: { user: { id: 'new-user' } } }, error: null });
-  const Component = (Route as unknown as { component: React.ComponentType }).component;
-  render(<Component />);
-  fireEvent.mouseDown(screen.getByRole('tab', { name: 'Sign up' }), { button: 0, ctrlKey: false });
-  fireEvent.click(screen.getByRole('tab', { name: 'Sign up' }));
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'signup-test@example.com' } });
-  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'test-password-only' } });
-  fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form') as HTMLFormElement);
-  await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/leads' }));
-  expect(signUp).toHaveBeenCalledTimes(1);
+async function login(isAdmin: boolean) {
+  navigate.mockClear();
+  signIn.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+  rpc.mockResolvedValue({ data: isAdmin, error: null });
+  const C = (Route as unknown as { component: React.ComponentType }).component;
+  const { unmount } = render(<C />);
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'a@example.com' } });
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'secret12' } });
+  fireEvent.submit(screen.getByRole('button', { name: 'Login' }).closest('form') as HTMLFormElement);
+  await waitFor(() => expect(navigate).toHaveBeenCalled());
+  unmount();
+  return navigate.mock.calls[0][0];
+}
+
+it('sends the admin straight to the admin dashboard', async () => {
+  expect(await login(true)).toEqual({ to: '/admin' });
+});
+it('sends ordinary accounts to their leads', async () => {
+  expect(await login(false)).toEqual({ to: '/leads' });
 });

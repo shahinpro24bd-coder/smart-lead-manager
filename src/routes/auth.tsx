@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamBrand } from "@/components/team-brand";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
@@ -37,41 +36,27 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/leads" });
+      if (data.session) goHome(data.session.user.id);
     });
   }, [navigate]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      setLoading(false);
       toast.error(error.message);
       return;
     }
-    navigate({ to: "/leads" });
+    await goHome(data.user?.id);
+    setLoading(false);
   };
 
-  const signUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (data.session) {
-      toast.success("Account toiri hoyeche!");
-      navigate({ to: "/leads" });
-      return;
-    }
-    toast.success("Account toiri hoyeche! Email-er confirmation link check korun.");
+  const goHome = async (userId?: string) => {
+    if (!userId) return navigate({ to: "/leads" });
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    navigate({ to: isAdmin ? "/admin" : "/leads" });
   };
 
   const google = async () => {
@@ -83,7 +68,8 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/leads" });
+    const { data } = await supabase.auth.getSession();
+    await goHome(data.session?.user.id);
   };
 
   return (
@@ -101,48 +87,21 @@ function AuthPage() {
           <CardDescription>Apnar account-e login korun.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign up</TabsTrigger>
-            </TabsList>
-            {(["login", "signup"] as const).map((tab) => (
-              <TabsContent key={tab} value={tab}>
-                <form onSubmit={tab === "login" ? signIn : signUp} className="space-y-4 pt-2">
+                <form onSubmit={signIn} className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor={`${tab}-email`}>Email</Label>
-                    <Input
-                      id={`${tab}-email`}
-                      type="email"
-                      autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                    />
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`${tab}-password`}>Password</Label>
-                    <div className="relative"><Input
-                      id={`${tab}-password`}
-                      type={showPassword ? "text" : "password"}
-                      autoComplete={tab === "login" ? "current-password" : "new-password"}
-                      className="pr-12"
-                      required
-                      minLength={6}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                    /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 size-8 -translate-y-1/2" aria-label={showPassword ? "Hide password" : "Show password"} title={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>
+                    <Label htmlFor="login-password">Password</Label>
+                    <div className="relative"><Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" className="pr-12" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 size-8 -translate-y-1/2" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Please wait…" : tab === "login" ? "Login" : "Create account"}
+                    {loading ? "Please wait…" : "Login"}
                     <ArrowRight className="ml-2 size-4" />
                   </Button>
+                  <p className="text-center text-xs text-muted-foreground">Account dorkar hole admin-er sathe jogajog korun.</p>
                 </form>
-              </TabsContent>
-            ))}
-          </Tabs>
           <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" /> OR <span className="h-px flex-1 bg-border" />
           </div>
