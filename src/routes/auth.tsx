@@ -6,7 +6,6 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TeamBrand } from "@/components/team-brand";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 
@@ -76,17 +75,14 @@ function AuthPage() {
     <main className="auth-page flex min-h-screen flex-col px-5 py-8">
       <header className="mx-auto w-full max-w-7xl"><TeamBrand compact /></header>
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-12">
-      <Card className="w-full border bg-card p-2 shadow-[var(--shadow-panel)] sm:p-5">
-        <div className="px-6 pb-6 pt-5">
+      <section className="auth-form w-full">
+        <div className="pb-6">
+          <img src="/team-shahin-logo.jpg" alt="TEAM SHAHIN" width={76} height={76} className="auth-emblem" />
           <p className="mb-3 text-xs font-semibold uppercase text-primary">Private workspace</p>
-          <h1 className="text-3xl font-semibold">Welcome back</h1>
+          <h1 className="text-4xl font-semibold">Welcome back<span className="text-primary">.</span></h1>
           <p className="mt-2 text-sm text-muted-foreground">TEAM SHAHIN-e sign in korun.</p>
         </div>
-        <CardHeader className="sr-only">
-          <CardTitle>TEAM SHAHIN sign in</CardTitle>
-          <CardDescription>Apnar account-e login korun.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <div>
                 <form onSubmit={signIn} className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -108,8 +104,8 @@ function AuthPage() {
           <Button variant="outline" className="w-full" onClick={google}>
             Continue with Google
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
       <p className="mt-6 text-center text-xs text-muted-foreground">TEAM SHAHIN · Private workspace</p>
       </div>
     </main>
