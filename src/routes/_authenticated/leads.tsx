@@ -24,6 +24,8 @@ import {
 
 } from "lucide-react";
 import { TeamBrand } from "@/components/team-brand";
+import { DEFAULT_LEAD_VIEW, LeadStatus } from "@/components/lead-status";
+import { signOutThisDevice } from "@/lib/account-session";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,7 +87,7 @@ function LeadsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [search, setSearch] = useState("");
-  const [view, setView] = useState<"active" | "archived" | "trash" | "collected">("active");
+  const [view, setView] = useState<"active" | "archived" | "trash" | "collected">(DEFAULT_LEAD_VIEW);
   const [selected, setSelected] = useState<string[]>([]);
 
   const {
@@ -378,7 +380,7 @@ function LeadsPage() {
   const signOut = async () => {
     await qc.cancelQueries();
     qc.clear();
-    await supabase.auth.signOut();
+    await signOutThisDevice();
     navigate({ to: "/auth", replace: true });
   };
 
@@ -689,7 +691,7 @@ function LeadsPage() {
                       />
                     </TableHead>
                     <TableHead className="w-16">#</TableHead>
-                    <TableHead className="w-20 text-center">Status</TableHead>
+                    <TableHead className="w-24 text-center">Status</TableHead>
                     <TableHead>WhatsApp</TableHead>
                     <TableHead>Facebook link</TableHead>
                     <TableHead className="w-32">Date</TableHead>
@@ -712,21 +714,8 @@ function LeadsPage() {
                       </TableCell>
                       <TableCell className="font-semibold">{lead.serial}</TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-8"
-                          onClick={() =>
-                            toggleVerified.mutate({ id: lead.id, verified: !lead.verified })
-                          }
-                          aria-label={lead.verified ? "Mark as not verified" : "Mark as verified"}
-                        >
-                          {lead.verified ? (
-                            <Check className="size-4 text-primary" />
-                          ) : (
-                            <X className="size-4 text-muted-foreground" />
-                          )}
-                        </Button>
+                        <LeadStatus verified={lead.verified} pending={toggleVerified.isPending}
+                          onChange={verified => toggleVerified.mutate({ id: lead.id, verified })} />
                       </TableCell>
                       <TableCell>
                         {lead.phone ? (
@@ -833,7 +822,7 @@ function LeadsPage() {
               { key: "archived", name: "Archive", icon: Archive, count: leads.filter(l => l.archived && !l.deleted_at).length },
               { key: "trash", name: "Trash", icon: Trash2, count: leads.filter(l => l.deleted_at).length },
               { key: "collected", name: "Previous Version Leads", icon: Globe, count: null },
-            ] as const).map(item => <Button key={item.key} variant="outline" aria-pressed={view === item.key} className="feature-tile" onClick={() => { setView(item.key); document.getElementById("lead-register")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); }}>
+            ] as const).map(item => <Button key={item.key} variant="outline" aria-pressed={view === item.key} className={`feature-tile ${view === item.key ? 'border-primary bg-primary/10' : ''}`} onClick={() => { setView(item.key); document.getElementById("lead-register")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); }}>
               <span className="feature-icon"><item.icon className="size-5" /></span>
               <ArrowUpRight className="feature-arrow size-4" />
               <span className="feature-name">{item.name}</span>
