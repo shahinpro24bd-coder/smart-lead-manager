@@ -19,6 +19,8 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Users,
+  ArrowUpRight,
+  Layers,
 
 } from "lucide-react";
 import { TeamBrand } from "@/components/team-brand";
@@ -381,8 +383,8 @@ function LeadsPage() {
   };
 
   return (
-    <main className="min-h-screen">
-      <header className="workspace-header px-5 py-5">
+    <main className="workspace-page min-h-screen">
+      <header className="workspace-header px-5 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <TeamBrand />
           <div className="flex flex-wrap items-center gap-2">
@@ -394,31 +396,24 @@ function LeadsPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl space-y-6 px-5 py-8">
+      <div className="mx-auto max-w-7xl space-y-8 px-5 py-8 sm:px-8 sm:py-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground"><LayoutDashboard className="size-3.5" /> WORKSPACE / LEADS</p>
-            <h1 className="text-3xl font-semibold">Lead workspace</h1>
+            <p className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground"><LayoutDashboard className="size-3.5" /> YOUR WORKSPACE</p>
+            <h1 className="text-3xl font-semibold sm:text-4xl">Lead collection<span className="text-primary">.</span></h1>
           </div>
           <Button variant="outline" size="sm" onClick={() => { refetchLeads(); qc.invalidateQueries({ queryKey: ["previous-version-leads"] }); }}>
             <RotateCcw className="mr-2 size-4" /> Refresh
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-4 border-y py-5 sm:grid-cols-4">
-          {[
-            { name: "Active leads", count: leads.filter(l => !l.archived && !l.deleted_at).length, icon: Users },
-            { name: "Verified", count: leads.filter(l => l.verified && !l.deleted_at).length, icon: ShieldCheck },
-            { name: "Archived", count: leads.filter(l => l.archived && !l.deleted_at).length, icon: Archive },
-            { name: "Total leads", count: leads.length, icon: Globe },
-          ].map(item => <div key={item.name} className="px-1"><div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground"><item.icon className="size-4" />{item.name}</div><div className="font-display text-2xl font-semibold tabular-nums">{isLoading || collectedLoading ? "—" : item.count.toLocaleString()}</div></div>)}
-        </div>
-        <Card className="workspace-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Add a lead</CardTitle>
+        <Card className="workspace-panel collection-composer">
+          <CardHeader className="flex-row items-center gap-3">
+            <span className="composer-icon"><Plus className="size-5" /></span>
+            <CardTitle className="text-xl">Add a lead</CardTitle>
           </CardHeader>
           <CardContent>
             <form
-              className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]"
+              className="grid gap-5 sm:grid-cols-[1.5fr_1fr_auto]"
               onSubmit={(e) => {
                 e.preventDefault();
                 addLead.mutate();
@@ -445,8 +440,8 @@ function LeadsPage() {
                   placeholder="8801XXXXXXXXX"
                 />
               </div>
-              <Button type="submit" className="sm:self-end" disabled={addLead.isPending}>
-                <Plus className="mr-2 size-4" /> Add
+              <Button type="submit" className="h-11 sm:self-end" disabled={addLead.isPending}>
+                <Plus className="mr-2 size-4" /> Add lead
               </Button>
             </form>
           </CardContent>
@@ -454,10 +449,10 @@ function LeadsPage() {
 
         {!showBulk ? (
           <Button variant="outline" onClick={() => setShowBulk(true)}>
-            <Plus className="mr-2 size-4" /> Ek sathe onek lead add korun (Bulk Add)
+            <Plus className="mr-2 size-4" /> Bulk Add
           </Button>
         ) : (
-          <Card className="shadow-[var(--shadow-panel)]">
+          <Card className="workspace-panel bulk-composer">
             <CardHeader>
               <CardTitle className="text-lg">Bulk Add — onek lead ek sathe</CardTitle>
             </CardHeader>
@@ -490,7 +485,7 @@ function LeadsPage() {
           </Card>
         )}
 
-        <Card className="workspace-panel border-t pt-6">
+        <Card className="workspace-panel lead-register" id="lead-register">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
               <CardTitle className="text-lg">
@@ -505,39 +500,10 @@ function LeadsPage() {
                   ({view === "collected" ? filteredCollected.length : filtered.length})
                 </span>
               </CardTitle>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={view === "active" ? "default" : "outline"}
-                  onClick={() => setView("active")}
-                >
-                  Active
-                </Button>
-                <Button
-                  size="sm"
-                  variant={view === "archived" ? "default" : "outline"}
-                  onClick={() => setView("archived")}
-                >
-                  <Archive className="mr-2 size-4" /> Archive
-                </Button>
-                <Button
-                  size="sm"
-                  variant={view === "trash" ? "default" : "outline"}
-                  onClick={() => setView("trash")}
-                >
-                  <Trash2 className="mr-2 size-4" /> Trash
-                </Button>
-                <Button
-                  size="sm"
-                  variant={view === "collected" ? "default" : "outline"}
-                  onClick={() => setView("collected")}
-                >
-                  <Globe className="mr-2 size-4" /> Previous Version Leads
-                </Button>
-              </div>
+
 
             </div>
-            <div className="flex flex-wrap items-end gap-3">
+            <div className="lead-filters flex flex-wrap items-end gap-3">
               <div className="space-y-1">
                 <Label htmlFor="search" className="text-xs">
                   Search (serial / link / number)
@@ -546,7 +512,7 @@ function LeadsPage() {
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="search"
-                  className="w-full min-w-40 sm:w-48 pl-8"
+                  className="w-full min-w-40 pl-8 sm:w-48"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search leads…"
@@ -587,9 +553,9 @@ function LeadsPage() {
             {view === "collected" ? (
               <>
                 {previousError ? <div className="py-8"><p>Previous leads load hoyni.</p><Button variant="outline" onClick={() => refetchPrevious()}>Retry</Button></div> : collectedLoading ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
+                  <p className="empty-leads py-12 text-center text-sm text-muted-foreground">Loading…</p>
                 ) : filteredCollected.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
+                  <p className="empty-leads py-12 text-center text-sm text-muted-foreground">
                     Ekhono kono link collect kora hoyni.
                   </p>
                 ) : (
@@ -694,16 +660,16 @@ function LeadsPage() {
             )}
 
             {isLoading ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
+              <p className="empty-leads py-12 text-center text-sm text-muted-foreground">Loading…</p>
             ) : leadsError ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="empty-leads py-12 text-center text-sm text-muted-foreground">
                 <p>Leads load hoyni — internet check korun.</p>
                 <Button size="sm" variant="outline" className="mt-3" onClick={() => refetchLeads()}>
                   <RotateCcw className="mr-1 h-4 w-4" /> Abar try korun
                 </Button>
               </div>
             ) : filtered.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
+              <p className="empty-leads py-12 text-center text-sm text-muted-foreground">
                 {view === "active"
                   ? "Kono lead nei. Upore link add korun."
                   : view === "archived"
@@ -851,6 +817,31 @@ function LeadsPage() {
 
           </CardContent>
         </Card>
+        <section className="workspace-tools" aria-label="Workspace features">
+          <div className="mb-5 flex items-center gap-3"><Layers className="size-5 text-primary" /><h2 className="text-xl font-semibold">Workspace overview</h2></div>
+        <div className="grid grid-cols-2 gap-4 border-y py-5 sm:grid-cols-4">
+          {[
+            { name: "Active leads", count: leads.filter(l => !l.archived && !l.deleted_at).length, icon: Users },
+            { name: "Verified", count: leads.filter(l => l.verified && !l.deleted_at).length, icon: ShieldCheck },
+            { name: "Archived", count: leads.filter(l => l.archived && !l.deleted_at).length, icon: Archive },
+            { name: "Total leads", count: leads.length, icon: Globe },
+          ].map(item => <div key={item.name} className="px-1"><div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground"><item.icon className="size-4" />{item.name}</div><div className="font-display text-2xl font-semibold tabular-nums">{isLoading || collectedLoading ? "—" : item.count.toLocaleString()}</div></div>)}
+        </div>
+          <div className="feature-grid mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {([
+              { key: "active", name: "Active leads", icon: Users, count: leads.filter(l => !l.archived && !l.deleted_at).length },
+              { key: "archived", name: "Archive", icon: Archive, count: leads.filter(l => l.archived && !l.deleted_at).length },
+              { key: "trash", name: "Trash", icon: Trash2, count: leads.filter(l => l.deleted_at).length },
+              { key: "collected", name: "Previous Version Leads", icon: Globe, count: null },
+            ] as const).map(item => <Button key={item.key} variant="outline" aria-pressed={view === item.key} className="feature-tile" onClick={() => { setView(item.key); document.getElementById("lead-register")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" }); }}>
+              <span className="feature-icon"><item.icon className="size-5" /></span>
+              <ArrowUpRight className="feature-arrow size-4" />
+              <span className="feature-name">{item.name}</span>
+              <span className="feature-count">{item.count === null ? "Previous collection" : `${item.count.toLocaleString()} leads`}</span>
+            </Button>)}
+          </div>
+        </section>
+        <footer className="workspace-footer"><span>TEAM SHAHIN</span><span>Private workspace</span></footer>
       </div>
     </main>
   );

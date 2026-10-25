@@ -26,12 +26,12 @@ function AdminPage() {
   const query = useQuery({ queryKey: ['admin-dashboard'], queryFn: () => load(), retry: false });
   const deletion = useMutation({ mutationFn: (userId: string) => remove({ data: { userId } }), onSuccess: () => { toast.success('Account removed. Leads preserved.'); qc.invalidateQueries({ queryKey: ['admin-dashboard'] }); }, onError: (e: Error) => toast.error(e.message) });
   const data = query.data;
-  return <main className="min-h-screen">
+  return <main className="admin-page min-h-screen">
     <header className="workspace-header px-5 py-5"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4"><TeamBrand /><Button asChild><Link to="/leads"><Plus /> Collect leads</Link></Button></div></header>
     <div className="mx-auto max-w-7xl px-5 py-8">
-      <p className="text-xs font-semibold uppercase text-primary">TEAM SHAHIN / Administration</p><h1 className="mt-2 text-3xl font-semibold">Admin dashboard</h1>
+      <p className="text-xs font-semibold uppercase text-primary">TEAM SHAHIN / Administration</p><h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Admin dashboard<span className="text-primary">.</span></h1>
       {query.isPending ? <p className="py-12">Loading…</p> : query.isError ? <div className="py-12"><p>{query.error.message}</p><Button className="mt-4" variant="outline" onClick={() => query.refetch()}>Retry</Button></div> : data && <>
-        <div className="my-8 grid grid-cols-2 gap-6 border-y py-6"><div><Users className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">Accounts</p><p className="text-3xl font-semibold">{data.accounts.length}</p></div><div><ListChecks className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">New lead submissions</p><p className="text-3xl font-semibold">{data.activity.length}</p></div></div>
+        <div className="admin-stats my-8 grid grid-cols-2 gap-6 border-y py-6"><div><Users className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">Accounts</p><p className="text-3xl font-semibold">{data.accounts.length}</p></div><div><ListChecks className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">New lead submissions</p><p className="text-3xl font-semibold">{data.activity.length}</p></div></div>
         <CreateAccount onDone={() => qc.invalidateQueries({ queryKey: ['admin-dashboard'] })} />
         {account && <AccountProfile userId={account} email={data.accounts.find(u => u.id === account)?.email ?? ''} onClose={() => setAccount('')} />}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-4"><h2 className="text-xl font-semibold">Accounts</h2><Input aria-label="Search accounts" className="max-w-sm" placeholder="Search email…" value={search} onChange={e => setSearch(e.target.value)} /></div>
