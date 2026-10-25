@@ -9,3 +9,4 @@
 - [ ] Restore original account access — blocked: uploaded CSV contains leads only, no original account emails or account export; original ownership is preserved and designated admin login is verified.- [x] Import uploaded CSV (1,355 leads) into Previous Version Leads; each account sees only its own; same link blocked across all accounts.
 - [x] Logo served as a plain file so it loads on any host (e.g. Vercel).
 - [x] Admin account shahinpro24@gmail.com created with admin role.
+- [x] Sign-up removed from login; admin login opens Admin; admin creates accounts, opens any account's leads and manages them; Collect leads button on Admin.
