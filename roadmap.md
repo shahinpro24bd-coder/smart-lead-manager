@@ -1,4 +1,6 @@
 # Tasks
+- [ ] Keep Active leads selected by default and provide explicit tick/cross lead controls.
+- [ ] Diagnose installed-app login and verify concurrent account access on separate devices.
 - [x] Put lead collection first and other feature boxes below; polish user, login and admin screens without changing their behavior.
 - [x] Use supplied logo and favicon, replace app-authored branding, improve and verify login presentation.
 - [x] Replace All Leads with Previous Version Leads; verify all 1,355 rows and cross-account canonical duplicate rejection in the UI.
