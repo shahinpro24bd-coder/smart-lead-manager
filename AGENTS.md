@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Serve the brand logo from public/ as a plain file, not a Lovable asset pointer, so it loads on any host.
+- previous_version_leads returns only archive rows whose original user_id matches the caller; global canonical_link uniqueness on leads blocks re-adding any link from any account.
