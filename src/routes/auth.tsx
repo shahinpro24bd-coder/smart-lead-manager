@@ -89,11 +89,11 @@ function AuthPage() {
                 <form onSubmit={signIn} className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
-                    <Input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+                    <Input id="login-email" type="email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Password</Label>
-                    <div className="relative"><Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" className="pr-12" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 size-8 -translate-y-1/2" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>
+                    <div className="relative"><Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="pr-12" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 size-8 -translate-y-1/2" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Please wait…" : "Login"}
