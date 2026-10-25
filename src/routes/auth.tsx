@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TeamBrand } from "@/components/team-brand";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { accountDestination } from "@/lib/account-session";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -36,26 +37,28 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) goHome(data.session.user.id);
-    });
+    }).catch(() => { /* Keep the sign-in form available if restoring a session fails. */ });
   }, [navigate]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw error;
+      if (!data.user) throw new Error("Login hoyni. Abar try korun.");
+      await goHome(data.user.id);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Login hoyni — internet check kore abar try korun.");
+    } finally {
       setLoading(false);
-      toast.error(error.message);
-      return;
     }
-    await goHome(data.user?.id);
-    setLoading(false);
   };
 
   const goHome = async (userId?: string) => {
     if (!userId) return navigate({ to: "/leads" });
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    navigate({ to: isAdmin ? "/admin" : "/leads" });
+    await navigate({ to: await accountDestination(userId) });
   };
 
   const google = async () => {
