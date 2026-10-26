@@ -26,6 +26,7 @@ import {
 import { TeamBrand } from "@/components/team-brand";
 import { DEFAULT_LEAD_VIEW, LeadStatus } from "@/components/lead-status";
 import { signOutThisDevice } from "@/lib/account-session";
+import { boundedRequest, recoveryQueryOptions } from "@/lib/request-recovery";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ export const Route = createFileRoute("/_authenticated/leads")({
 });
 
 function LeadsPage() {
+  const { user } = Route.useRouteContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [link, setLink] = useState("");
@@ -96,27 +98,24 @@ function LeadsPage() {
     isError: leadsError,
     refetch: refetchLeads,
   } = useQuery({
+    ...recoveryQueryOptions,
     queryKey: ["leads"],
-    retry: 4,
-    retryDelay: (n) => Math.min(1000 * 2 ** n, 8000),
-    queryFn: async (): Promise<Lead[]> => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const uid = sessionData.session?.user?.id;
-      if (!uid) return [];
+    queryFn: async ({ signal }): Promise<Lead[]> => {
+      const uid = user.id;
 
       // 30 din er purono trash auto delete — background-e, fail korleo page atkabe na.
-      void supabase.rpc("purge_old_trash").then(() => undefined);
+      void boundedRequest(s => supabase.rpc("purge_old_trash").abortSignal(s)).catch(() => undefined);
 
       // 1000 row er limit er jonno page by page sob lead ana hoy.
       const PAGE = 1000;
       const all: Lead[] = [];
       for (let start = 0; ; start += PAGE) {
-        const { data, error } = await supabase
+        const { data, error } = await boundedRequest(s => supabase
           .from("leads")
           .select("id, serial, phone, facebook_link, verified, archived, deleted_at, created_at")
           .eq("user_id", uid)
           .order("serial", { ascending: false })
-          .range(start, start + PAGE - 1);
+          .range(start, start + PAGE - 1).abortSignal(s), undefined, signal);
         if (error) throw error;
         all.push(...(data ?? []));
         if (!data || data.length < PAGE) break;
@@ -126,22 +125,22 @@ function LeadsPage() {
   });
 
   const { data: isAdmin = false } = useQuery({
+    ...recoveryQueryOptions,
     queryKey: ["admin-role"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return false;
-      const result = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+    queryFn: async ({ signal }) => {
+      const result = await boundedRequest(s => supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).abortSignal(s), undefined, signal);
       if (result.error) throw result.error;
       return result.data;
     },
   });
   const { data: collected = [], isLoading: collectedLoading, isError: previousError, refetch: refetchPrevious } = useQuery({
+    ...recoveryQueryOptions,
     queryKey: ["previous-version-leads"],
     enabled: view === "collected",
-    queryFn: async (): Promise<Collected[]> => {
+    queryFn: async ({ signal }): Promise<Collected[]> => {
       const all: Collected[] = [];
       for (let start = 0; ; start += 1000) {
-        const { data, error } = await supabase.rpc("previous_version_leads").range(start, start + 999);
+        const { data, error } = await boundedRequest(s => supabase.rpc("previous_version_leads").range(start, start + 999).abortSignal(s), undefined, signal);
         if (error) throw error;
         all.push(...(data ?? []).map(row => ({ ...row, canonical_link: row.id, mine: false })));
         if (!data || data.length < 1000) break;
@@ -552,9 +551,10 @@ function LeadsPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {(view === "collected" ? previousError && collected.length > 0 : leadsError && leads.length > 0) && <p role="status" className="mb-4 text-sm text-muted-foreground">Update load hoyni; ager leads dekhano hocche.</p>}
             {view === "collected" ? (
               <>
-                {previousError ? <div className="py-8"><p>Previous leads load hoyni.</p><Button variant="outline" onClick={() => refetchPrevious()}>Retry</Button></div> : collectedLoading ? (
+                {previousError && collected.length === 0 ? <div className="py-8"><p>Previous leads load hoyni.</p><Button variant="outline" onClick={() => refetchPrevious()}>Retry</Button></div> : collectedLoading ? (
                   <p className="empty-leads py-12 text-center text-sm text-muted-foreground">Loading…</p>
                 ) : filteredCollected.length === 0 ? (
                   <p className="empty-leads py-12 text-center text-sm text-muted-foreground">
@@ -663,7 +663,7 @@ function LeadsPage() {
 
             {isLoading ? (
               <p className="empty-leads py-12 text-center text-sm text-muted-foreground">Loading…</p>
-            ) : leadsError ? (
+            ) : leadsError && leads.length === 0 ? (
               <div className="empty-leads py-12 text-center text-sm text-muted-foreground">
                 <p>Leads load hoyni — internet check korun.</p>
                 <Button size="sm" variant="outline" className="mt-3" onClick={() => refetchLeads()}>
