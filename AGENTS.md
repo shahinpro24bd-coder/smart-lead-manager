@@ -15,3 +15,4 @@
 - Keep lead collection and the lead register above the overview and feature navigation; share presentation tokens in src/styles.css to keep user, sign-in and admin screens consistent.
 - Use account-session helpers for bounded post-login role routing and device-local logout so slow role requests do not trap sign-in or revoke other devices.
 - Use the shared lead-status control for explicit verification assignments; opening the workspace always defaults to active leads.
+- Use project-owned bounded auth transport and abortable read deadlines with one transient retry; retain cached rows on background read failures and never automatically retry writes, to prevent indefinite loading without duplicating actions.

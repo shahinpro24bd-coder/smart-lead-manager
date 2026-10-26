@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { recoverSession } from "@/lib/session-recovery";
 import { TeamBrand } from "@/components/team-brand";
 import { LoaderCircle } from "lucide-react";
 
@@ -29,9 +29,11 @@ function Index() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      navigate({ to: data.session ? "/leads" : "/auth", replace: true });
-    }).catch(() => navigate({ to: "/auth", replace: true }));
+    let active = true;
+    recoverSession().then(({ data }) => {
+      if (active) navigate({ to: data.session ? "/leads" : "/auth", replace: true });
+    }).catch(() => { if (active) navigate({ to: "/auth", replace: true }); });
+    return () => { active = false; };
   }, [navigate]);
 
   return (

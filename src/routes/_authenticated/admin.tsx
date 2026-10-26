@@ -8,6 +8,7 @@ import { TeamBrand } from '@/components/team-brand';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { adminDashboard, removeAccount, createAccount, accountLeads, updateAccountLead } from '@/lib/admin.functions';
+import { boundedRequest, recoveryQueryOptions } from '@/lib/request-recovery';
 
 export const Route = createFileRoute('/_authenticated/admin')({
   head: () => ({ meta: [
@@ -23,14 +24,15 @@ function AdminPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [account, setAccount] = useState('');
-  const query = useQuery({ queryKey: ['admin-dashboard'], queryFn: () => load(), retry: false });
+  const query = useQuery({ ...recoveryQueryOptions, queryKey: ['admin-dashboard'], queryFn: ({ signal }) => boundedRequest(s => load({ signal: s }), undefined, signal) });
   const deletion = useMutation({ mutationFn: (userId: string) => remove({ data: { userId } }), onSuccess: () => { toast.success('Account removed. Leads preserved.'); qc.invalidateQueries({ queryKey: ['admin-dashboard'] }); }, onError: (e: Error) => toast.error(e.message) });
   const data = query.data;
   return <main className="admin-page min-h-screen">
     <header className="workspace-header px-5 py-5"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4"><TeamBrand /><Button asChild><Link to="/leads"><Plus /> Collect leads</Link></Button></div></header>
     <div className="mx-auto max-w-7xl px-5 py-8">
       <p className="text-xs font-semibold uppercase text-primary">TEAM SHAHIN / Administration</p><h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Admin dashboard<span className="text-primary">.</span></h1>
-      {query.isPending ? <p className="py-12">Loading…</p> : query.isError ? <div className="py-12"><p>{query.error.message}</p><Button className="mt-4" variant="outline" onClick={() => query.refetch()}>Retry</Button></div> : data && <>
+       {query.isError && data && <div role="status" className="mt-6 flex items-center gap-3"><p>Update load hoyni; ager data dekhano hocche.</p><Button variant="outline" onClick={() => query.refetch()}>Retry</Button></div>}
+       {query.isPending ? <p className="py-12">Loading…</p> : query.isError && !data ? <div className="py-12"><p>{query.error instanceof Error ? query.error.message : 'Load hoyni — abar try korun.'}</p><Button className="mt-4" variant="outline" onClick={() => query.refetch()}>Retry</Button></div> : data && <>
         <div className="admin-stats my-8 grid grid-cols-2 gap-6 border-y py-6"><div><Users className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">Accounts</p><p className="text-3xl font-semibold">{data.accounts.length}</p></div><div><ListChecks className="mb-2 size-5 text-primary" /><p className="text-sm text-muted-foreground">New lead submissions</p><p className="text-3xl font-semibold">{data.activity.length}</p></div></div>
         <CreateAccount onDone={() => qc.invalidateQueries({ queryKey: ['admin-dashboard'] })} />
         {account && <AccountProfile userId={account} email={data.accounts.find(u => u.id === account)?.email ?? ''} onClose={() => setAccount('')} />}
@@ -57,11 +59,11 @@ function AccountProfile({ userId, email, onClose }: { userId: string; email: str
   const load = useServerFn(accountLeads);
   const update = useServerFn(updateAccountLead);
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['account-leads', userId], queryFn: () => load({ data: { userId } }) });
+  const q = useQuery({ ...recoveryQueryOptions, queryKey: ['account-leads', userId], queryFn: ({ signal }) => boundedRequest(s => load({ data: { userId }, signal: s }), undefined, signal) });
   const m = useMutation({ mutationFn: (v: { id: string; action: 'verify' | 'unverify' | 'archive' | 'unarchive' | 'trash' | 'restore' | 'delete' | 'phone'; phone?: string }) => update({ data: v }), onSuccess: () => qc.invalidateQueries({ queryKey: ['account-leads', userId] }), onError: (e: Error) => toast.error(e.message) });
   return <section className="mb-10 rounded-lg border p-5">
     <div className="mb-4 flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{email} — leads ({q.data?.length ?? 0})</h2><Button variant="ghost" size="icon" aria-label="Close profile" onClick={onClose}><X /></Button></div>
-    {q.isPending ? <p>Loading…</p> : q.isError ? <p>{q.error.message}</p> : q.data.length === 0 ? <p className="text-muted-foreground">No leads in this account.</p> :
+    {q.isPending ? <p>Loading…</p> : q.isError ? <div><p>{q.error instanceof Error ? q.error.message : 'Load hoyni — abar try korun.'}</p><Button variant="outline" onClick={() => q.refetch()}>Retry</Button></div> : q.data.length === 0 ? <p className="text-muted-foreground">No leads in this account.</p> :
     <div className="max-h-[32rem] overflow-auto"><table className="w-full text-left text-sm"><thead className="sticky top-0 border-b bg-background text-muted-foreground"><tr><th className="py-2">#</th><th>Facebook</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead><tbody>{q.data.map(l => <tr key={l.id} className="border-b">
       <td className="py-2 pr-3">{l.serial}</td>
       <td className="max-w-xs truncate pr-3"><a className="inline-flex items-center gap-1 text-primary underline" href={l.facebook_link} target="_blank" rel="noreferrer">{l.facebook_link}<ExternalLink className="size-3" /></a></td>

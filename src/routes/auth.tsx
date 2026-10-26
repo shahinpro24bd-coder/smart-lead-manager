@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { TeamBrand } from "@/components/team-brand";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { accountDestination } from "@/lib/account-session";
+import { recoverSession } from "@/lib/session-recovery";
+import { boundedRequest, SESSION_TIMEOUT_MS } from "@/lib/request-recovery";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -35,9 +37,11 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) goHome(data.session.user.id);
+    let active = true;
+    recoverSession().then(({ data }) => {
+      if (active && data.session) goHome(data.session.user.id);
     }).catch(() => { /* Keep the sign-in form available if restoring a session fails. */ });
+    return () => { active = false; };
   }, [navigate]);
 
   const signIn = async (e: React.FormEvent) => {
@@ -45,7 +49,7 @@ function AuthPage() {
     if (loading) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await boundedRequest(() => supabase.auth.signInWithPassword({ email: email.trim(), password }), SESSION_TIMEOUT_MS);
       if (error) throw error;
       if (!data.user) throw new Error("Login hoyni. Abar try korun.");
       await goHome(data.user.id);
@@ -70,7 +74,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    const { data } = await supabase.auth.getSession();
+    const { data } = await recoverSession();
     await goHome(data.session?.user.id);
   };
 
