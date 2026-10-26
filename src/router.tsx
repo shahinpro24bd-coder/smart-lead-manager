@@ -1,11 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { recoveryQueryOptions } from "./lib/request-recovery";
 
 export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { retry: 3, refetchOnWindowFocus: true, refetchOnReconnect: true, staleTime: 15_000 },
+      queries: recoveryQueryOptions,
     },
   });
 
